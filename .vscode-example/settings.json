@@ -1,0 +1,56 @@
+{
+	"json.schemaDownload.enable": true,
+	"search.exclude": {
+		"**/node_modules": true,
+		"**/.git": true,
+		".yarn": true,
+		".cache": true,
+		"yarn.lock": true,
+		"package.json": true,
+		"tsconfig.json": true,
+		".vscode": true,
+		"build": true,
+		"dist": true,
+		"lib": true,
+		"public/build": true,
+		"server-build": true,
+		"old": true,
+		"**/.yarn": true,
+		"**/.pnp.*": true
+	},
+	"files.watcherExclude": {
+		"**/.git/objects/**": true,
+		"**/.git/subtree-cache/**": true,
+		"**/node_modules/**": true,
+		"**/target": true,
+		".yarn": true,
+		".cache": true,
+		"build": true,
+		"**/lib": true,
+		"public/build": true,
+		"server-build": true,
+		"old": true
+	},
+	"files.exclude": {
+		"**/.git": true,
+		"**/.svn": true,
+		"**/.hg": true,
+		"**/CVS": true,
+		"**/.DS_Store": true,
+		"**/Thumbs.db": true,
+		"old/**/*": true
+	},
+	"editor.insertSpaces": false,
+	"testing.automaticallyOpenPeekView": "never",
+	"editor.formatOnSave": true,
+	"files.insertFinalNewline": true,
+	"editor.tabSize": 2,
+	"prettier.useTabs": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.stylelint": "explicit",
+		"source.fixAll.eslint": "explicit"
+	},
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"typescript.suggest.paths": true
+}

@@ -1,0 +1,29 @@
+{
+	"name": "maxeyts",
+	"version": "1.0.0",
+	"description": "MaxeyTS is a minimal Node.js web application framework like express",
+	"main": "index.js",
+	"scripts": {
+		"build": "tsc",
+		"start": "node dist/server.js",
+		"dev": "nodemon --exec ts-node --files src/server.ts"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/superman566/maxeyTS.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/superman566/maxeyTS/issues"
+	},
+	"homepage": "https://github.com/superman566/maxeyTS#readme",
+	"devDependencies": {
+		"@types/node": "^22.13.10",
+		"dotenv": "^16.4.7",
+		"nodemon": "^3.1.9",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.8.2"
+	}
+}
