@@ -1,4 +1,6 @@
-import http from "http";
+import http from 'http';
+import { MaxeyServerResponse } from './types';
+import fs from 'fs/promises';
 
 export default class MaxeyTS {
 	#server: http.Server;
@@ -8,31 +10,55 @@ export default class MaxeyTS {
 		this.#server = http.createServer();
 		this.#routes = new Map();
 
-		this.#server.on("request", (req, res) => {
-			const method = req.method?.toLowerCase() ?? "get";
-			const url = req.url ?? "/";
-			const key = method + url;
-			const route = this.#routes.get(key);
-			console.log("A request comes in!");
-			console.log("routes:", ...this.#routes.keys());
+		this.#server.on(
+			'request',
+			(req: http.IncomingMessage, res: MaxeyServerResponse) => {
+				// set status code of the response
+				res.status = function (code: number) {
+					res.statusCode = code;
+					return res;
+				};
 
-			// set status code of the response
-			// res.status = (code: number) =>{
-			// 	res.statusCode = code;
-			// 	return res;
-			// }
+				// set a json data back to the client
+				res.json = function (data: any) {
+					res.setHeader('Content-Type', 'application/json');
+					res.end(JSON.stringify(data));
+				};
 
-			// res.json = () =>{}
+				res.sendFile = async function (path: string, mime: string) {
+					try {
+						const fileHandler = await fs.open(path, 'r');
+						const fileStream = fileHandler.createReadStream();
+						res.setHeader('Content-Type', mime);
+						fileStream.pipe(res);
 
-			if (!route) {
-				res.writeHead(404, { "Content-Type": "text/plain" });
-				res.end("Not Found");
-			} else {
-				route(req, res);
-				res.writeHead(200, { "Content-Type": "text/plain" });
-				res.end("ok");
+						fileStream.on('end', () => {
+							res.status(200).json('Done');
+						});
+
+						fileStream.on('error', () => {
+							res.status(500).json({
+								error: `Internal Server Error`,
+							});
+						});
+					} catch (error) {
+						res.status(404).json({ error: 'File not found or cannot be read' });
+					}
+				};
+
+				const method = req.method?.toLowerCase() ?? 'get';
+				const url = req.url ?? '/';
+				const key = method + url;
+				const routeCallBack = this.#routes.get(key);
+
+				if (!routeCallBack) {
+					return res.status(404).json({
+						error: `Cannot ${method} ${url}`,
+					});
+				}
+				routeCallBack(req, res);
 			}
-		});
+		);
 	}
 
 	route(method: string, path: string, callback: Function) {
