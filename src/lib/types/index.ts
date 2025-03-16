@@ -1,7 +1,11 @@
 import http from 'http';
+import StatusCode from './statusCode';
+import StatusReasons from './statusReasons';
 
-export type MaxeyServerResponse = http.ServerResponse & {
+type MaxeyServerResponse = http.ServerResponse & {
 	status: (code: number) => MaxeyServerResponse;
 	json: (data: any) => void;
 	sendFile: (path: string, mime: string) => void;
 };
+
+export { StatusCode, StatusReasons, MaxeyServerResponse };

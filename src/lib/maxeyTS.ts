@@ -1,6 +1,7 @@
 import http from 'http';
-import { MaxeyServerResponse } from './types';
+import { MaxeyServerResponse, StatusCode } from './types';
 import fs from 'fs/promises';
+import { getStatusReason } from './utils/utils';
 
 export default class MaxeyTS {
 	#server: http.Server;
@@ -33,16 +34,18 @@ export default class MaxeyTS {
 						fileStream.pipe(res);
 
 						fileStream.on('end', () => {
-							res.status(200).json('Done');
+							res.status(StatusCode.OK).json(getStatusReason(StatusCode.OK));
 						});
 
 						fileStream.on('error', () => {
-							res.status(500).json({
-								error: `Internal Server Error`,
-							});
+							res
+								.status(StatusCode.INTERNAL_SERVER_ERROR)
+								.json(getStatusReason(StatusCode.INTERNAL_SERVER_ERROR));
 						});
 					} catch (error) {
-						res.status(404).json({ error: 'File not found or cannot be read' });
+						res
+							.status(StatusCode.BAD_REQUEST)
+							.json({ error: 'File not found or cannot be read' });
 					}
 				};
 
@@ -52,9 +55,9 @@ export default class MaxeyTS {
 				const routeCallBack = this.#routes.get(key);
 
 				if (!routeCallBack) {
-					return res.status(404).json({
-						error: `Cannot ${method} ${url}`,
-					});
+					return res
+						.status(StatusCode.BAD_REQUEST)
+						.json(getStatusReason(StatusCode.BAD_REQUEST));
 				}
 				routeCallBack(req, res);
 			}
