@@ -28,13 +28,15 @@ export default class MaxeyTS {
 
 				res.sendFile = async function (path: string, mime: string) {
 					try {
+						res.setHeader('Content-Type', mime);
+
 						const fileHandler = await fs.open(path, 'r');
 						const fileStream = fileHandler.createReadStream();
-						res.setHeader('Content-Type', mime);
 						fileStream.pipe(res);
 
-						fileStream.on('end', () => {
-							res.status(StatusCode.OK).json(getStatusReason(StatusCode.OK));
+						fileStream.on('end', async () => {
+							await fileHandler.close();
+							res.end();
 						});
 
 						fileStream.on('error', () => {
