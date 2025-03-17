@@ -6,10 +6,12 @@ import { getStatusReason } from './utils/utils';
 export default class MaxeyTS {
 	#server: http.Server;
 	#routes: Map<string, Function>; // key is unlimited, will adopt Map
+	#middlewares: Function[];
 
 	constructor() {
 		this.#server = http.createServer();
 		this.#routes = new Map();
+		this.#middlewares = [];
 
 		this.#server.on(
 			'request',
@@ -25,6 +27,24 @@ export default class MaxeyTS {
 					res.setHeader('Content-Type', 'application/json');
 					res.end(JSON.stringify(data));
 				};
+
+				function runMiddleware(
+					req: http.IncomingMessage,
+					res: MaxeyServerResponse,
+					middlewares: Function[],
+					start: number
+				) {
+					if (middlewares.length === start) {
+						if (routeCallBack) {
+							// run routes
+							routeCallBack(req, res);
+						}
+					} else {
+						middlewares[start](req, res, () => {
+							runMiddleware(req, res, middlewares, start + 1);
+						});
+					}
+				}
 
 				res.sendFile = async function (path: string, mime: string) {
 					try {
@@ -61,9 +81,15 @@ export default class MaxeyTS {
 						.status(StatusCode.BAD_REQUEST)
 						.json(getStatusReason(StatusCode.BAD_REQUEST));
 				}
-				routeCallBack(req, res);
+
+				// middleware
+				runMiddleware(req, res, this.#middlewares, 0);
 			}
 		);
+	}
+
+	use(callback: Function) {
+		this.#middlewares.push(callback);
 	}
 
 	route(method: string, path: string, callback: Function) {

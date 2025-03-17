@@ -41,6 +41,20 @@ type User = {
 
 const server = new MaxeyTS();
 
+server.use(
+	(req: http.IncomingMessage, res: MaxeyServerResponse, next: Function) => {
+		console.log('1st middleware');
+		next();
+	}
+);
+
+server.use(
+	(req: http.IncomingMessage, res: MaxeyServerResponse, next: Function) => {
+		console.log('2nd middleware');
+		next();
+	}
+);
+
 server.route(
 	'get',
 	'/',
