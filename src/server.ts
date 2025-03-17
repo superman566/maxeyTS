@@ -1,8 +1,16 @@
 import http from 'http';
 import MaxeyTS from './lib/maxeyTS';
-import { MaxeyServerResponse } from './lib/types';
+import { MaxeyServerResponse, StatusCode } from './lib/types';
+import { getStatusReason } from './lib/utils/utils';
 
 const PORT = Number(process.env.PORT) || 8000;
+
+type Session = {
+	userId: number;
+	token: string;
+};
+
+let SESSIONS: Session[] = [];
 
 const USERS = [
 	{ id: 1, name: 'tony', username: 'superman566', password: 'password' },
@@ -26,11 +34,32 @@ const POSTS: Post[] = [
 	},
 ];
 
+type User = {
+	username: string;
+	password: string;
+};
+
 const server = new MaxeyTS();
 
 server.route(
 	'get',
 	'/',
+	(req: http.IncomingMessage, res: MaxeyServerResponse) => {
+		res.sendFile('./public/index.html', 'text/html');
+	}
+);
+
+server.route(
+	'get',
+	'/login',
+	(req: http.IncomingMessage, res: MaxeyServerResponse) => {
+		res.sendFile('./public/index.html', 'text/html');
+	}
+);
+
+server.route(
+	'get',
+	'/profile',
 	(req: http.IncomingMessage, res: MaxeyServerResponse) => {
 		res.sendFile('./public/index.html', 'text/html');
 	}
@@ -60,6 +89,84 @@ server.route(
 	}
 );
 
+// JOSN Routes
+server.route(
+	'post',
+	'/api/login',
+	(req: http.IncomingMessage, res: MaxeyServerResponse) => {
+		let body = '';
+		let parsedBody: User;
+		req.on('data', (trunk) => {
+			body += trunk.toString('utf-8');
+		});
+		req.on('end', () => {
+			parsedBody = JSON.parse(body);
+			const { username, password } = parsedBody;
+
+			const user = USERS.find(
+				(user) => user.username === username && user.password === password
+			);
+
+			if (user) {
+				const token = Math.floor(Math.random() * 100000000).toString();
+				SESSIONS.push({
+					userId: user.id,
+					token,
+				});
+				console.log('find user SESSIONS->', SESSIONS);
+				res.setHeader('set-Cookie', `token=${token}; Path=/;`);
+				res.status(StatusCode.OK).json(getStatusReason(StatusCode.OK));
+			} else {
+				res
+					.status(StatusCode.UNAUTHORIZED)
+					.json(getStatusReason(StatusCode.UNAUTHORIZED));
+			}
+		});
+	}
+);
+
+server.route(
+	'delete',
+	'/api/logout',
+	(req: http.IncomingMessage, res: MaxeyServerResponse) => {}
+);
+
+server.route(
+	'get',
+	'/api/user',
+	(req: http.IncomingMessage, res: MaxeyServerResponse) => {
+		const token = req.headers.cookie?.split('=')[1];
+		console.log('token->', token);
+		console.log('SESSIONS->', SESSIONS);
+		const session = SESSIONS.find(
+			(session: Session) => session.token === token
+		);
+		if (session) {
+			const user = USERS.find((user) => session.userId === user.id);
+			if (!user) {
+				res
+					.status(StatusCode.INTERNAL_SERVER_ERROR)
+					.json(getStatusReason(StatusCode.INTERNAL_SERVER_ERROR));
+			} else {
+				res.status(StatusCode.OK).json({
+					username: user.username,
+					name: user.name,
+				});
+			}
+		} else {
+			res
+				.status(StatusCode.UNAUTHORIZED)
+				.json(getStatusReason(StatusCode.UNAUTHORIZED));
+		}
+	}
+);
+
+server.route(
+	'put',
+	'/api/user',
+	(req: http.IncomingMessage, res: MaxeyServerResponse) => {}
+);
+
 server.route(
 	'get',
 	'/api/posts',
@@ -78,11 +185,9 @@ server.route(
 );
 
 server.route(
-	'get',
-	'/api/user',
-	(req: http.IncomingMessage, res: MaxeyServerResponse) => {
-		res.status(200).json(USERS);
-	}
+	'post',
+	'/api/posts',
+	(req: http.IncomingMessage, res: MaxeyServerResponse) => {}
 );
 
 server.listen(PORT, () => {
